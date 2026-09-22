@@ -1,0 +1,39 @@
+# Cloudflare Pages へ自動配備する。
+# 動かすには GitHub の Settings → Secrets and variables → Actions に次の 2 つを入れる:
+#   CLOUDFLARE_API_TOKEN   … Cloudflare のダッシュボードで作る（人が作るしかない）。
+#                            権限は「アカウント > Cloudflare Pages > 編集」だけでよい。
+#   CLOUDFLARE_ACCOUNT_ID  … 269737194926079a2f7f7b523c51094b
+# 入っていないうちは配備の手順だけ飛ばす（テストとビルドは動く）。
+# 手元から配備する場合は `npx wrangler pages deploy dist --project-name taorenai-tetris --branch main`。
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Python 版との一致テスト。ここが落ちたら AI が弱くなっているので配備しない
+      - run: npm test
+
+      - run: npm run build
+
+      - name: Cloudflare Pages へ配備
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npx wrangler pages deploy dist --project-name taorenai-tetris --branch main

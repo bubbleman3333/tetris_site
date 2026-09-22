@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>絶対に倒れないテトリス — AI を倒せたら殿堂入り</title>
+    <meta name="description" content="自己対戦で学習したテトリス AI が、ブラウザの中で延々と積み続けます。おじゃまブロックを送って倒してください。倒せた人は殿堂入り。" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="絶対に倒れないテトリス" />
+    <meta property="og:description" content="自己対戦で学習したテトリス AI に、おじゃまブロックを送って挑む。倒せたら殿堂入り。" />
+    <meta property="og:url" content="https://taorenai-tetris.pages.dev/" />
+    <meta property="og:image" content="https://taorenai-tetris.pages.dev/ogp.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="hero">
+        <h1>絶対に倒れない<span>テトリス</span></h1>
+        <p class="lead">
+          自己対戦で強くなった AI が、このページの中で延々と積み続けます。<br />
+          おじゃまブロックを送りつけて、倒してください。
+        </p>
+        <p class="hero-stat" id="hero-stat">世界の撃破率を読み込み中…</p>
+      </header>
+
+      <main class="play">
+        <div class="scoreboard">
+          <div><span class="k">生存時間</span><b id="stat-time">0:00</b></div>
+          <div><span class="k">消したライン</span><b id="stat-lines">0</b></div>
+          <div><span class="k">送ったおじゃま</span><b id="stat-garbage">0 段</b></div>
+        </div>
+
+        <div class="stage">
+          <canvas id="pending" class="pending" aria-hidden="true"></canvas>
+          <canvas id="board" class="board" aria-label="AI の盤面"></canvas>
+          <aside class="side">
+            <div class="slot">
+              <span class="k">HOLD</span>
+              <canvas id="hold" class="mini"></canvas>
+            </div>
+            <div class="slot next">
+              <span class="k">NEXT</span>
+              <canvas class="mini" data-next="0"></canvas>
+              <canvas class="mini small" data-next="1"></canvas>
+              <canvas class="mini small" data-next="2"></canvas>
+              <canvas class="mini small" data-next="3"></canvas>
+              <canvas class="mini small" data-next="4"></canvas>
+            </div>
+          </aside>
+        </div>
+
+        <div class="controls">
+          <div class="energy">
+            <div class="energy-bar"><i id="energy-fill"></i></div>
+            <span class="energy-label">エネルギー（時間で回復）</span>
+          </div>
+          <div class="attacks" id="attacks"></div>
+          <div class="under">
+            <button id="btn-giveup" class="ghost">あきらめる</button>
+            <span class="think" id="think">—</span>
+          </div>
+        </div>
+      </main>
+
+      <section class="panel" id="world">
+        <h2>世界の戦績</h2>
+        <p class="world-line" id="world-line">読み込み中…</p>
+        <h3>殿堂（最速撃破 100 人）</h3>
+        <ol class="hall" id="hall"><li class="empty">読み込み中…</li></ol>
+      </section>
+
+      <section class="panel about">
+        <h2>この AI について</h2>
+        <p>
+          この AI は、<b>自己対戦の TD 学習で育てたニューラルネット</b>です。置ける場所をすべて数え上げ、
+          置いた後の盤面を 43 個の数（各列の高さ・穴の数と深さ・凸凹・行と列の切り替わり・井戸の深さ・
+          T-Spin が入る穴・消した列数・火力・B2B・REN・予告おじゃま・HOLD と NEXT のミノ）にして、
+          「この先どれだけ得か」を予想する価値関数 V に通します。報酬は「生き残る +0.1／1 列消す +0.2／
+          おじゃま 1 段送る +1.0／死ぬ -5」だけで、積み方は一切教えていません。AI 同士を戦わせて、
+          勝った重みが次の相手になる勝ち抜き方式で鍛えました。画面では NEXT を 2 個先まで読ませています。
+        </p>
+        <p>
+          <b>「絶対に倒れない」は煽りです。</b>実際の撃破率は上の「世界の戦績」にそのまま出しています。
+          おじゃま無しならほぼ倒れませんが、上手に送れば倒せます。
+        </p>
+        <p>
+          このサイトは <a href="https://github.com/bubbleman3333/game_ai_lab" target="_blank" rel="noopener">game_ai_lab</a>
+          という個人の実験場から生まれました。主旨は「アルゴリズムが新しい」ことではなく、
+          <b>AI にコードを書いてもらえば、個人でも自分の興味のある分野で独自の機械学習ができる</b>ということです。
+          テトリス・オセロ・将棋・ポーカー・レースなどを同じやり方で作っています。
+        </p>
+        <p class="meta" id="about-meta"></p>
+      </section>
+
+      <footer>
+        <a href="https://github.com/bubbleman3333/tetris_site" target="_blank" rel="noopener">ソースコード</a>
+        ・<a href="https://rakunowa.com" target="_blank" rel="noopener">ラクノワ</a>
+      </footer>
+    </div>
+
+    <div class="overlay" id="overlay" hidden>
+      <div class="card" id="overlay-card"></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
